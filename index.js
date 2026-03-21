@@ -1,3 +1,9 @@
+import express from "express";
+const app = express();
+
+app.get("/", (req, res) => res.send("Bot is alive"));
+app.listen(3000, () => console.log("Uptime server running"));
+
 import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 
 // Create the bot client
