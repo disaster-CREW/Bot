@@ -1,12 +1,18 @@
 import express from "express";
-const app = express();
+import fs from "fs";
+import path from "path";
+import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 
+// ---------------------------
+// UPTIME WEB SERVER
+// ---------------------------
+const app = express();
 app.get("/", (req, res) => res.send("Bot is alive"));
 app.listen(3000, () => console.log("Uptime server running"));
 
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
-
-// Create the bot client
+// ---------------------------
+// DISCORD CLIENT
+// ---------------------------
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -15,15 +21,36 @@ const client = new Client({
   ]
 });
 
-// Slash commands
-const commands = [
-  {
-    name: "ping",
-    description: "Replies with Pong!"
-  }
-];
+// ---------------------------
+// COMMAND LOADER
+// ---------------------------
+const commands = [];
+client.commands = new Map();
 
-// Register slash commands when bot starts
+const commandsPath = path.join(process.cwd(), "commands");
+const commandFolders = fs.readdirSync(commandsPath);
+
+for (const folder of commandFolders) {
+  const folderPath = path.join(commandsPath, folder);
+  const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith(".js"));
+
+  for (const file of commandFiles) {
+    const filePath = path.join(folderPath, file);
+    const command = (await import(`file://${filePath}`)).default;
+
+    if (command?.data && command?.execute) {
+      commands.push(command.data.toJSON());
+      client.commands.set(command.data.name, command);
+      console.log(`Loaded command: ${command.data.name}`);
+    } else {
+      console.log(`❌ Invalid command file: ${file}`);
+    }
+  }
+}
+
+// ---------------------------
+// REGISTER SLASH COMMANDS
+// ---------------------------
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
@@ -41,14 +68,27 @@ client.once("ready", async () => {
   }
 });
 
-// Handle slash commands
+// ---------------------------
+// COMMAND HANDLER
+// ---------------------------
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === "ping") {
-    await interaction.reply("Pong!");
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    interaction.reply({
+      content: "There was an error executing this command.",
+      ephemeral: true
+    });
   }
 });
 
-// Login using Render environment variable
+// ---------------------------
+// LOGIN
+// ---------------------------
 client.login(process.env.TOKEN);
