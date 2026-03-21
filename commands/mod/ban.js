@@ -3,23 +3,24 @@ import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("ban")
-    .setDescription("Ban a member")
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .setDescription("Ban a member from the server")
     .addUserOption(opt =>
-      opt.setName("user").setDescription("User to ban").setRequired(true)
-    ),
+      opt.setName("user")
+        .setDescription("User to ban")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("reason")
+        .setDescription("Reason for ban")
+        .setRequired(false)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+
   async execute(interaction) {
-    const member = interaction.options.getMember("user");
+    const user = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason") || "No reason provided";
 
-    if (!member) {
-      return interaction.reply({ content: "I can't find that member.", ephemeral: true });
-    }
-
-    try {
-      await member.ban();
-      await interaction.reply(`Banned ${member.user.tag}`);
-    } catch {
-      await interaction.reply({ content: "I couldn't ban that member.", ephemeral: true });
-    }
+    await interaction.guild.members.ban(user.id, { reason });
+    interaction.reply(`🔨 Banned **${user.tag}** — ${reason}`);
   }
 };
