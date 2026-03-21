@@ -1,60 +1,48 @@
-import "dotenv/config";
-import { Client, GatewayIntentBits, Collection, REST, Routes } from "discord.js";
-import fs from "fs";
-import path from "path";
-import "./keepalive.js";
+import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 
+// Create the bot client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.DirectMessages
+    GatewayIntentBits.GuildVoiceStates
   ]
 });
 
-client.commands = new Collection();
-
-const commands = [];
-const commandsPath = path.join(process.cwd(), "commands");
-const folders = fs.readdirSync(commandsPath);
-
-for (const folder of folders) {
-  const folderPath = path.join(commandsPath, folder);
-  const files = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
-  for (const file of files) {
-    const command = (await import(`./commands/${folder}/${file}`)).default;
-    if (command?.data && command?.execute) {
-      client.commands.set(command.data.name, command);
-      commands.push(command.data.toJSON());
-    }
+// Slash commands
+const commands = [
+  {
+    name: "ping",
+    description: "Replies with Pong!"
   }
-}
+];
 
+// Register slash commands when bot starts
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
-  await rest.put(
-    Routes.applicationCommands(client.user.id),
-    { body: commands }
-  );
-
-  console.log("Slash commands registered.");
-});
-
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
 
   try {
-    await command.execute(interaction, client);
-  } catch (err) {
-    console.error(err);
-    await interaction.reply({ content: "Something went wrong.", ephemeral: true });
+    await rest.put(
+      Routes.applicationCommands(client.user.id),
+      { body: commands }
+    );
+
+    console.log("Slash commands registered.");
+  } catch (error) {
+    console.error(error);
   }
 });
 
+// Handle slash commands
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "ping") {
+    await interaction.reply("Pong!");
+  }
+});
+
+// Login using Render environment variable
 client.login(process.env.TOKEN);
