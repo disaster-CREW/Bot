@@ -1,47 +1,54 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import "dotenv/config";
+
+// ---------------------------
+// FIX __dirname FOR ES MODULES
+// ---------------------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ---------------------------
 // UPTIME WEB SERVER
 // ---------------------------
 const app = express();
 app.get("/", (req, res) => res.send("Bot is alive"));
-app.listen(3000, () => console.log("Uptime server running"));
+app.listen(3000, () => console.log("🌐 Uptime server running on port 3000"));
 
 // ---------------------------
-// DISCORD CLIENT
+// DISCORD CLIENT (NO MUSIC INTENTS)
 // ---------------------------
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildMessages
   ]
 });
 
 // ---------------------------
 // COMMAND LOADER
 // ---------------------------
-const commands = [];
 client.commands = new Map();
+const commands = [];
 
-const commandsPath = path.join(process.cwd(), "commands");
+const commandsPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(commandsPath);
 
 for (const folder of commandFolders) {
   const folderPath = path.join(commandsPath, folder);
-  const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith(".js"));
+  const commandFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
 
   for (const file of commandFiles) {
     const filePath = path.join(folderPath, file);
     const command = (await import(`file://${filePath}`)).default;
 
     if (command?.data && command?.execute) {
-      commands.push(command.data.toJSON());
       client.commands.set(command.data.name, command);
-      console.log(`Loaded command: ${command.data.name}`);
+      commands.push(command.data.toJSON());
+      console.log(`✅ Loaded command: ${command.data.name}`);
     } else {
       console.log(`❌ Invalid command file: ${file}`);
     }
@@ -52,7 +59,7 @@ for (const folder of commandFolders) {
 // REGISTER SLASH COMMANDS
 // ---------------------------
 client.once("ready", async () => {
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`🤖 Logged in as ${client.user.tag}`);
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
@@ -62,29 +69,48 @@ client.once("ready", async () => {
       { body: commands }
     );
 
-    console.log("Slash commands registered.");
+    console.log("📌 Slash commands registered globally.");
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error registering commands:", error);
   }
 });
 
 // ---------------------------
-// COMMAND HANDLER
+// COMMAND + BUTTON HANDLER
 // ---------------------------
 client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+  // Slash commands
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
 
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error("❌ Command error:", error);
+      if (!interaction.replied) {
+        interaction.reply({
+          content: "There was an error executing this command.",
+          ephemeral: true
+        });
+      }
+    }
+  }
 
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    interaction.reply({
-      content: "There was an error executing this command.",
-      ephemeral: true
-    });
+  // Button interactions (for Tic Tac Toe + future button games)
+  if (interaction.isButton()) {
+    const id = interaction.customId;
+
+    // If the command file has a .button() handler, run it
+    for (const cmd of client.commands.values()) {
+      if (typeof cmd.button === "function") {
+        try {
+          await cmd.button(interaction);
+        } catch (error) {
+          console.error("❌ Button error:", error);
+        }
+      }
+    }
   }
 });
 
