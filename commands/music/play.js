@@ -1,5 +1,10 @@
 import { SlashCommandBuilder } from "discord.js";
-import { joinVoiceChannel, createAudioPlayer, createAudioResource } from "@discordjs/voice";
+import { 
+  joinVoiceChannel, 
+  createAudioPlayer, 
+  createAudioResource, 
+  AudioPlayerStatus 
+} from "@discordjs/voice";
 import play from "play-dl";
 
 export default {
@@ -25,28 +30,49 @@ export default {
 
     await interaction.reply(`🎵 Searching for **${query}**...`);
 
-    // Search or use URL
-    const ytInfo = await play.search(query, { limit: 1 });
-    if (!ytInfo.length) return interaction.editReply("❌ No results found.");
+    try {
+      let url = query;
 
-    const stream = await play.stream(ytInfo[0].url);
+      // If it's not a URL, search YouTube
+      if (!query.startsWith("http")) {
+        const results = await play.search(query, { limit: 1 });
+        if (!results.length) {
+          return interaction.editReply("❌ No results found.");
+        }
+        url = results[0].url;
+      }
 
-    // Join VC
-    const connection = joinVoiceChannel({
-      channelId: channel.id,
-      guildId: interaction.guild.id,
-      adapterCreator: interaction.guild.voiceAdapterCreator
-    });
+      // Get stream
+      const stream = await play.stream(url, { discordPlayerCompatibility: true });
 
-    // Create player
-    const player = createAudioPlayer();
-    const resource = createAudioResource(stream.stream, {
-      inputType: stream.type
-    });
+      // Join VC
+      const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: interaction.guild.id,
+        adapterCreator: interaction.guild.voiceAdapterCreator
+      });
 
-    player.play(resource);
-    connection.subscribe(player);
+      // Create player
+      const player = createAudioPlayer();
+      const resource = createAudioResource(stream.stream, {
+        inputType: stream.type
+      });
 
-    interaction.editReply(`▶️ Now playing: **${ytInfo[0].title}**`);
+      player.play(resource);
+      connection.subscribe(player);
+
+      player.on(AudioPlayerStatus.Playing, () => {
+        console.log("Audio is playing");
+      });
+
+      player.on("error", error => {
+        console.error("Audio player error:", error);
+      });
+
+      interaction.editReply(`▶️ Now playing: **${url}**`);
+    } catch (err) {
+      console.error("Play command error:", err);
+      interaction.editReply("❌ Something went wrong while trying to play that.");
+    }
   }
 };
