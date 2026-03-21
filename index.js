@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
-import "dotenv/config";
 
 // ---------------------------
 // FIX __dirname FOR ES MODULES
