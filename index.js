@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from "discord.js";
 
 // ---------------------------
 // FIX __dirname FOR ES MODULES
@@ -87,10 +87,11 @@ client.on("interactionCreate", async interaction => {
       await command.execute(interaction);
     } catch (error) {
       console.error("❌ Command error:", error);
+
       if (!interaction.replied) {
         interaction.reply({
           content: "There was an error executing this command.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
     }
@@ -98,9 +99,6 @@ client.on("interactionCreate", async interaction => {
 
   // Button interactions (for Tic Tac Toe + future button games)
   if (interaction.isButton()) {
-    const id = interaction.customId;
-
-    // If the command file has a .button() handler, run it
     for (const cmd of client.commands.values()) {
       if (typeof cmd.button === "function") {
         try {
