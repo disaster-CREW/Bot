@@ -18,17 +18,19 @@ const app = express();
 // Serve your website folder (HTML, CSS, images, etc.)
 app.use(express.static(path.join(__dirname, "website")));
 
-// Homepage (optional override)
+// Homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "index.html"));
 });
 
-// TOS page (optional if you want a clean URL)
+// ⭐ CUSTOM ENDPOINTS ⭐
+
+// Terms of Service
 app.get("/tos", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "tos.html"));
 });
 
-// Privacy page (optional)
+// Privacy Policy
 app.get("/privacy", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "privacy.html"));
 });
