@@ -30,6 +30,26 @@ function saveGuildConfig(guildId, data) {
 }
 
 // ---------------------------
+// PERMISSION CHECK HELPER
+// ---------------------------
+function hasStaffPermission(member, guildId) {
+  const file = path.join(__dirname, "guildConfig.json");
+  if (!fs.existsSync(file)) return false;
+
+  const config = JSON.parse(fs.readFileSync(file));
+  const guildConfig = config[guildId];
+  if (!guildConfig) return false;
+
+  const adminRole = guildConfig.adminRole;
+  const modRole = guildConfig.modRole;
+
+  return (
+    member.roles.cache.has(adminRole) ||
+    member.roles.cache.has(modRole)
+  );
+}
+
+// ---------------------------
 // EXPRESS WEB SERVER
 // ---------------------------
 const app = express();
@@ -119,7 +139,7 @@ client.on("guildCreate", async guild => {
           components: [
             {
               type: 2,
-              style: 1, // BLUE BUTTON (Primary)
+              style: 1, // BLUE BUTTON
               label: "Done",
               custom_id: "setup_done"
             }
@@ -134,7 +154,7 @@ client.on("guildCreate", async guild => {
 });
 
 // ---------------------------
-// COMMAND LOADER
+// COMMAND LOADER (AUTO CATEGORY)
 // ---------------------------
 client.commands = new Map();
 const commands = [];
@@ -151,9 +171,10 @@ for (const folder of commandFolders) {
     const command = (await import(`file://${filePath}`)).default;
 
     if (command?.data && command?.execute) {
+      command.category = folder; // AUTO‑ASSIGN CATEGORY BASED ON FOLDER NAME
       client.commands.set(command.data.name, command);
       commands.push(command.data.toJSON());
-      console.log(`✅ Loaded command: ${command.data.name}`);
+      console.log(`✅ Loaded command: ${command.data.name} (Category: ${folder})`);
     } else {
       console.log(`❌ Invalid command file: ${file}`);
     }
@@ -184,9 +205,20 @@ client.once("ready", async () => {
 // INTERACTION HANDLER
 // ---------------------------
 client.on("interactionCreate", async interaction => {
+  // Slash commands
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
+
+    // Permission check for moderation folder
+    if (command.category === "mod") {
+      if (!hasStaffPermission(interaction.member, interaction.guild.id)) {
+        return interaction.reply({
+          content: "You do not have permission to use this command.",
+          ephemeral: true
+        });
+      }
+    }
 
     try {
       await command.execute(interaction);
