@@ -1,8 +1,4 @@
-import {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  PermissionFlagsBits
-} from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 export default {
   category: "misc",
@@ -14,26 +10,20 @@ export default {
   async execute(interaction) {
     const client = interaction.client;
 
-    // Organize commands by category
     const categories = {};
 
     client.commands.forEach(cmd => {
       const cat = cmd.category || "misc";
 
-      // Hide mod commands from non-staff
+      // Hide mod commands from non-staff using Discord perms only
       if (cat === "mod") {
-        const member = interaction.member;
-        const guildId = interaction.guild?.id;
-
-        // If user isn't staff, skip mod commands
-        if (!client.hasStaffPermission(member, guildId)) return;
+        if (!interaction.member.permissions.has("ManageGuild")) return;
       }
 
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(cmd);
     });
 
-    // Build the embed
     const embed = new EmbedBuilder()
       .setTitle("ASTRYX Help Menu")
       .setDescription("Here are all available commands you can use")
@@ -42,9 +32,11 @@ export default {
     for (const [category, cmds] of Object.entries(categories)) {
       embed.addFields({
         name: `📂 ${category.toUpperCase()}`,
-        value: cmds
-          .map(c => `**/${c.data.name}** — ${c.data.description}`)
-          .join("\n"),
+        value: cmds.length
+          ? cmds
+              .map(c => `**/${c.data.name}** — ${c.data.description}`)
+              .join("\n")
+          : "No commands available.",
         inline: false
       });
     }
