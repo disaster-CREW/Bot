@@ -23,7 +23,8 @@ app.listen(3000, () => console.log("🌐 Uptime server running on port 3000"));
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates // <-- REQUIRED FOR MUSIC COMMANDS
   ]
 });
 
