@@ -2,7 +2,6 @@ import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
-    
   .setName("ban")
    .setDescription("Ban a member from the server")
     .setDMPermission(false)
