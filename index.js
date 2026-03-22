@@ -113,6 +113,17 @@ client.on("guildCreate", async guild => {
                 .slice(0, 25)
             }
           ]
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 1, // BLUE BUTTON (Primary)
+              label: "Done",
+              custom_id: "setup_done"
+            }
+          ]
         }
       ]
     });
@@ -191,11 +202,13 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Setup dropdowns
+  // Dropdown handlers
   if (interaction.isStringSelectMenu()) {
+    const guildId = interaction.guild.id;
+
     if (interaction.customId === "setup_admin_role") {
       const adminRole = interaction.values[0];
-      saveGuildConfig(interaction.guild.id, { adminRole });
+      saveGuildConfig(guildId, { adminRole });
 
       await interaction.reply({
         content: `Admin role set to <@&${adminRole}>`,
@@ -205,7 +218,7 @@ client.on("interactionCreate", async interaction => {
 
     if (interaction.customId === "setup_mod_role") {
       const modRole = interaction.values[0];
-      saveGuildConfig(interaction.guild.id, { modRole });
+      saveGuildConfig(guildId, { modRole });
 
       await interaction.reply({
         content: `Moderator role set to <@&${modRole}>`,
@@ -214,16 +227,48 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Button handlers
+  // Done button handler
   if (interaction.isButton()) {
-    for (const cmd of client.commands.values()) {
-      if (typeof cmd.button === "function") {
-        try {
-          await cmd.button(interaction);
-        } catch (error) {
-          console.error("❌ Button error:", error);
-        }
+    if (interaction.customId === "setup_done") {
+      const guildId = interaction.guild.id;
+
+      const file = path.join(__dirname, "guildConfig.json");
+      const config = JSON.parse(fs.readFileSync(file));
+      const guildConfig = config[guildId];
+
+      if (!guildConfig?.adminRole || !guildConfig?.modRole) {
+        return interaction.reply({
+          content: "Please select both an Admin and Moderator role before finishing setup.",
+          ephemeral: true
+        });
       }
+
+      await interaction.message.delete();
+
+      await interaction.channel.send({
+        embeds: [
+          {
+            title: "✅ Setup Complete",
+            description: "ASTRYX is now fully configured and ready to use.",
+            color: 0x00ff99,
+            fields: [
+              {
+                name: "Admin Role",
+                value: `<@&${guildConfig.adminRole}>`,
+                inline: true
+              },
+              {
+                name: "Moderator Role",
+                value: `<@&${guildConfig.modRole}>`,
+                inline: true
+              }
+            ],
+            footer: {
+              text: "ASTRYX • Setup System"
+            }
+          }
+        ]
+      });
     }
   }
 });
