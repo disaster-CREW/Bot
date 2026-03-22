@@ -4,6 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("kick")
     .setDescription("Kick a member from the server")
+   .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("user")
         .setDescription("User to kick")
