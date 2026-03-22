@@ -2,7 +2,13 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  MessageFlags
+} from "discord.js";
 
 // ---------------------------
 // FIX __dirname FOR ES MODULES
@@ -30,9 +36,15 @@ function saveGuildConfig(guildId, data) {
 }
 
 // ---------------------------
-// PERMISSION CHECK HELPER
+// PERMISSION CHECK (FIXED)
 // ---------------------------
 function hasStaffPermission(member, guildId) {
+  // Always allow server owner
+  if (member.id === member.guild.ownerId) return true;
+
+  // Always allow admins
+  if (member.permissions.has("Administrator")) return true;
+
   const file = path.join(__dirname, "guildConfig.json");
   if (!fs.existsSync(file)) return false;
 
@@ -43,6 +55,7 @@ function hasStaffPermission(member, guildId) {
   const adminRole = guildConfig.adminRole;
   const modRole = guildConfig.modRole;
 
+  // Allow staff roles
   return (
     member.roles.cache.has(adminRole) ||
     member.roles.cache.has(modRole)
@@ -68,16 +81,15 @@ app.get("/privacy", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "privacy.html"));
 });
 
-app.listen(3000, () => console.log("🌐 Website + Bot server running on port 3000"));
+app.listen(3000, () =>
+  console.log("🌐 Website + Bot server running on port 3000")
+);
 
 // ---------------------------
 // DISCORD CLIENT
 // ---------------------------
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages
-  ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
 // ---------------------------
@@ -139,7 +151,7 @@ client.on("guildCreate", async guild => {
           components: [
             {
               type: 2,
-              style: 1, // BLUE BUTTON
+              style: 1,
               label: "Done",
               custom_id: "setup_done"
             }
@@ -147,14 +159,13 @@ client.on("guildCreate", async guild => {
         }
       ]
     });
-
   } catch (err) {
     console.error("Setup message error:", err);
   }
 });
 
 // ---------------------------
-// COMMAND LOADER (AUTO CATEGORY)
+// COMMAND LOADER
 // ---------------------------
 client.commands = new Map();
 const commands = [];
@@ -164,17 +175,21 @@ const commandFolders = fs.readdirSync(commandsPath);
 
 for (const folder of commandFolders) {
   const folderPath = path.join(commandsPath, folder);
-  const commandFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
+  const commandFiles = fs
+    .readdirSync(folderPath)
+    .filter(f => f.endsWith(".js"));
 
   for (const file of commandFiles) {
     const filePath = path.join(folderPath, file);
     const command = (await import(`file://${filePath}`)).default;
 
     if (command?.data && command?.execute) {
-      command.category = folder; // AUTO‑ASSIGN CATEGORY BASED ON FOLDER NAME
+      command.category = folder;
       client.commands.set(command.data.name, command);
       commands.push(command.data.toJSON());
-      console.log(`✅ Loaded command: ${command.data.name} (Category: ${folder})`);
+      console.log(
+        `✅ Loaded command: ${command.data.name} (Category: ${folder})`
+      );
     } else {
       console.log(`❌ Invalid command file: ${file}`);
     }
@@ -190,10 +205,9 @@ client.once("ready", async () => {
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
-    await rest.put(
-      Routes.applicationCommands(client.user.id),
-      { body: commands }
-    );
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands
+    });
 
     console.log("📌 Slash commands registered globally.");
   } catch (error) {
@@ -210,9 +224,7 @@ client.on("interactionCreate", async interaction => {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    // ---------------------------
-    // DM DETECTION FOR MOD COMMANDS
-    // ---------------------------
+    // MOD COMMAND PROTECTION
     if (command.category === "mod") {
       if (!interaction.guild) {
         return interaction.reply({
@@ -279,7 +291,8 @@ client.on("interactionCreate", async interaction => {
 
       if (!guildConfig?.adminRole || !guildConfig?.modRole) {
         return interaction.reply({
-          content: "Please select both an Admin and Moderator role before finishing setup.",
+          content:
+            "Please select both an Admin and Moderator role before finishing setup.",
           ephemeral: true
         });
       }
