@@ -210,8 +210,17 @@ client.on("interactionCreate", async interaction => {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    // Permission check for moderation folder
+    // ---------------------------
+    // DM DETECTION FOR MOD COMMANDS
+    // ---------------------------
     if (command.category === "mod") {
+      if (!interaction.guild) {
+        return interaction.reply({
+          content: "Moderation commands cannot be used in DMs.",
+          ephemeral: true
+        });
+      }
+
       if (!hasStaffPermission(interaction.member, interaction.guild.id)) {
         return interaction.reply({
           content: "You do not have permission to use this command.",
