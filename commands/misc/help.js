@@ -1,39 +1,27 @@
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 export default {
   category: "misc",
 
   data: new SlashCommandBuilder()
     .setName("help")
-    .setDescription("Shows all available commands"),
+    .setDescription("Shows all bot commands"),
 
   async execute(interaction) {
     const client = interaction.client;
 
-    // Detect if user is staff using Discord perms only
-    const isStaff = interaction.member.permissions.has([
-      PermissionFlagsBits.ManageGuild,
-      PermissionFlagsBits.ManageMessages,
-      PermissionFlagsBits.KickMembers,
-      PermissionFlagsBits.BanMembers,
-      PermissionFlagsBits.Administrator
-    ]);
-
     const categories = {};
 
+    // Group commands by category
     client.commands.forEach(cmd => {
       const cat = cmd.category || "misc";
-
-      // Hide mod commands from non-staff
-      if (cat === "mod" && !isStaff) return;
-
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(cmd);
     });
 
     const embed = new EmbedBuilder()
       .setTitle("ASTRYX Help Menu")
-      .setDescription("Here are all available commands you can use")
+      .setDescription("Here are all commands (some might not be usable depending on your permissions)")
       .setColor("#5865F2");
 
     for (const [category, cmds] of Object.entries(categories)) {
