@@ -4,6 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("dm")
     .setDescription("Send a private message to a user")
+    .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("user").setDescription("User to DM").setRequired(true)
     )
