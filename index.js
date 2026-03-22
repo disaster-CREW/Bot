@@ -11,11 +11,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ---------------------------
-// UPTIME WEB SERVER
+// EXPRESS WEB SERVER
 // ---------------------------
 const app = express();
-app.get("/", (req, res) => res.send("Bot is alive"));
-app.listen(3000, () => console.log("🌐 Uptime server running on port 3000"));
+
+// Serve your website folder (HTML, CSS, images, etc.)
+app.use(express.static(path.join(__dirname, "website")));
+
+// Homepage (optional override)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "website", "index.html"));
+});
+
+// TOS page (optional if you want a clean URL)
+app.get("/tos", (req, res) => {
+  res.sendFile(path.join(__dirname, "website", "tos.html"));
+});
+
+// Privacy page (optional)
+app.get("/privacy", (req, res) => {
+  res.sendFile(path.join(__dirname, "website", "privacy.html"));
+});
+
+app.listen(3000, () => console.log("🌐 Website + Bot server running on port 3000"));
 
 // ---------------------------
 // DISCORD CLIENT
@@ -23,8 +41,7 @@ app.listen(3000, () => console.log("🌐 Uptime server running on port 3000"));
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildVoiceStates // <-- REQUIRED FOR MUSIC COMMANDS
+    GatewayIntentBits.GuildMessages
   ]
 });
 
@@ -79,7 +96,6 @@ client.once("ready", async () => {
 // COMMAND + BUTTON HANDLER
 // ---------------------------
 client.on("interactionCreate", async interaction => {
-  // Slash commands
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -98,7 +114,6 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Button interactions
   if (interaction.isButton()) {
     for (const cmd of client.commands.values()) {
       if (typeof cmd.button === "function") {
