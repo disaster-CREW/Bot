@@ -4,6 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("timeout")
     .setDescription("Timeout a member")
+    .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("user")
         .setDescription("User to timeout")
