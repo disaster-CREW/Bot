@@ -11,26 +11,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ---------------------------
+// SAVE GUILD CONFIG
+// ---------------------------
+function saveGuildConfig(guildId, data) {
+  const file = path.join(__dirname, "guildConfig.json");
+  let config = {};
+
+  if (fs.existsSync(file)) {
+    config = JSON.parse(fs.readFileSync(file));
+  }
+
+  config[guildId] = {
+    ...config[guildId],
+    ...data
+  };
+
+  fs.writeFileSync(file, JSON.stringify(config, null, 2));
+}
+
+// ---------------------------
 // EXPRESS WEB SERVER
 // ---------------------------
 const app = express();
 
-// Serve your website folder (HTML, CSS, images, etc.)
 app.use(express.static(path.join(__dirname, "website")));
 
-// Homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "index.html"));
 });
 
-// ⭐ CUSTOM ENDPOINTS ⭐
-
-// Terms of Service
 app.get("/tos", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "tos.html"));
 });
 
-// Privacy Policy
 app.get("/privacy", (req, res) => {
   res.sendFile(path.join(__dirname, "website", "privacy.html"));
 });
@@ -45,6 +58,68 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages
   ]
+});
+
+// ---------------------------
+// GUILD SETUP EVENT
+// ---------------------------
+client.on("guildCreate", async guild => {
+  try {
+    const channel = guild.channels.cache.find(
+      c =>
+        c.isTextBased() &&
+        c.permissionsFor(guild.members.me).has("SendMessages")
+    );
+
+    if (!channel) return;
+
+    await channel.send({
+      content: `Thanks for adding **ASTRYX**! Let's get your server set up.`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: "setup_admin_role",
+              placeholder: "Select an Admin Role",
+              min_values: 1,
+              max_values: 1,
+              options: guild.roles.cache
+                .filter(r => r.name !== "@everyone")
+                .map(role => ({
+                  label: role.name,
+                  value: role.id
+                }))
+                .slice(0, 25)
+            }
+          ]
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: "setup_mod_role",
+              placeholder: "Select a Moderator Role",
+              min_values: 1,
+              max_values: 1,
+              options: guild.roles.cache
+                .filter(r => r.name !== "@everyone")
+                .map(role => ({
+                  label: role.name,
+                  value: role.id
+                }))
+                .slice(0, 25)
+            }
+          ]
+        }
+      ]
+    });
+
+  } catch (err) {
+    console.error("Setup message error:", err);
+  }
 });
 
 // ---------------------------
@@ -95,7 +170,7 @@ client.once("ready", async () => {
 });
 
 // ---------------------------
-// COMMAND + BUTTON HANDLER
+// INTERACTION HANDLER
 // ---------------------------
 client.on("interactionCreate", async interaction => {
   if (interaction.isChatInputCommand()) {
@@ -116,6 +191,30 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
+  // Setup dropdowns
+  if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === "setup_admin_role") {
+      const adminRole = interaction.values[0];
+      saveGuildConfig(interaction.guild.id, { adminRole });
+
+      await interaction.reply({
+        content: `Admin role set to <@&${adminRole}>`,
+        ephemeral: true
+      });
+    }
+
+    if (interaction.customId === "setup_mod_role") {
+      const modRole = interaction.values[0];
+      saveGuildConfig(interaction.guild.id, { modRole });
+
+      await interaction.reply({
+        content: `Moderator role set to <@&${modRole}>`,
+        ephemeral: true
+      });
+    }
+  }
+
+  // Button handlers
   if (interaction.isButton()) {
     for (const cmd of client.commands.values()) {
       if (typeof cmd.button === "function") {
