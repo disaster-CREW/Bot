@@ -18,7 +18,7 @@ app.get("/", (req, res) => res.send("Bot is alive"));
 app.listen(3000, () => console.log("🌐 Uptime server running on port 3000"));
 
 // ---------------------------
-// DISCORD CLIENT (NO MUSIC INTENTS)
+// DISCORD CLIENT
 // ---------------------------
 const client = new Client({
   intents: [
@@ -97,7 +97,7 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Button interactions (for Tic Tac Toe + future button games)
+  // Button interactions
   if (interaction.isButton()) {
     for (const cmd of client.commands.values()) {
       if (typeof cmd.button === "function") {
