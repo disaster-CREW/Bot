@@ -31,7 +31,7 @@ export default {
       await interaction.editReply(step);
     }
 
-    // Step 3: Final public message
-    await interaction.editReply("💉 **Injected happiness.**");
+    // Step 3: Final public message using the user's input
+    await interaction.editReply(`💉 **Injected ${what}.**`);
   }
 };
