@@ -4,6 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("warn")
     .setDescription("Privately warn a user in DMs.")
+    .setDMPermission(false)
     .addUserOption(option =>
       option
         .setName("user")
