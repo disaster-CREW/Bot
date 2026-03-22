@@ -4,6 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("purge")
     .setDescription("Delete messages in bulk")
+    .setDMPermission(false)
     .addIntegerOption(opt =>
       opt.setName("amount")
         .setDescription("Number of messages to delete (1–100)")
