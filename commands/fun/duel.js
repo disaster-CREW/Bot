@@ -10,6 +10,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("duel")
     .setDescription("Challenge someone to a Tic Tac Toe duel")
+    .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("opponent")
         .setDescription("Who do you want to duel?")
