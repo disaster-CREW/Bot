@@ -202,7 +202,7 @@ client.once("ready", async () => {
 =========================================
 `);
 
-  client.user.setActivity("over the galaxy", { type: 3 });
+  client.user.setActivity("𝕆𝕧𝕖𝕣 𝕥𝕙𝕖 𝔾𝕒𝕝𝕒𝕩𝕪", { type: 3 });
   
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
