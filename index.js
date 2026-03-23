@@ -201,7 +201,7 @@ client.once("ready", async () => {
         🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
 =========================================
 `);
-}, 800);
+  
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
