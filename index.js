@@ -201,6 +201,16 @@ client.once("ready", async () => {
         🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
 =========================================
 `);
+
+client.once("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`);
+
+  // Set bot status
+  client.user.setActivity("over the galaxy", { type: 3 });
+
+  // ...anything else you already have in here
+});
+
   
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
