@@ -36,13 +36,10 @@ function saveGuildConfig(guildId, data) {
 }
 
 // ---------------------------
-// PERMISSION CHECK (FIXED)
+// PERMISSION CHECK
 // ---------------------------
 function hasStaffPermission(member, guildId) {
-  // Always allow server owner
   if (member.id === member.guild.ownerId) return true;
-
-  // Always allow admins
   if (member.permissions.has("Administrator")) return true;
 
   const file = path.join(__dirname, "guildConfig.json");
@@ -55,7 +52,6 @@ function hasStaffPermission(member, guildId) {
   const adminRole = guildConfig.adminRole;
   const modRole = guildConfig.modRole;
 
-  // Allow staff roles
   return (
     member.roles.cache.has(adminRole) ||
     member.roles.cache.has(modRole)
@@ -197,10 +193,14 @@ for (const folder of commandFolders) {
 }
 
 // ---------------------------
-// REGISTER SLASH COMMANDS
+// REGISTER SLASH COMMANDS + STARTUP MESSAGE
 // ---------------------------
 client.once("ready", async () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
+  console.log(`
+=========================================
+        🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
+=========================================
+`);
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
@@ -219,12 +219,10 @@ client.once("ready", async () => {
 // INTERACTION HANDLER
 // ---------------------------
 client.on("interactionCreate", async interaction => {
-  // Slash commands
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    // MOD COMMAND PROTECTION
     if (command.category === "mod") {
       if (!interaction.guild) {
         return interaction.reply({
@@ -255,7 +253,6 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Dropdown handlers
   if (interaction.isStringSelectMenu()) {
     const guildId = interaction.guild.id;
 
@@ -280,7 +277,6 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // Done button handler
   if (interaction.isButton()) {
     if (interaction.customId === "setup_done") {
       const guildId = interaction.guild.id;
