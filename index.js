@@ -1,4 +1,3 @@
-import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -57,29 +56,6 @@ function hasStaffPermission(member, guildId) {
     member.roles.cache.has(modRole)
   );
 }
-
-// ---------------------------
-// EXPRESS WEB SERVER
-// ---------------------------
-const app = express();
-
-app.use(express.static(path.join(__dirname, "website")));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "website", "index.html"));
-});
-
-app.get("/tos", (req, res) => {
-  res.sendFile(path.join(__dirname, "website", "tos.html"));
-});
-
-app.get("/privacy", (req, res) => {
-  res.sendFile(path.join(__dirname, "website", "privacy.html"));
-});
-
-app.listen(3000, () =>
-  console.log("🌐 Website + Bot server running on port 3000")
-);
 
 // ---------------------------
 // DISCORD CLIENT
@@ -203,7 +179,7 @@ client.once("ready", async () => {
 `);
 
   client.user.setActivity("𝕆𝕧𝕖𝕣 𝕥𝕙𝕖 𝔾𝕒𝕝𝕒𝕩𝕪", { type: 3 });
-  
+
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
