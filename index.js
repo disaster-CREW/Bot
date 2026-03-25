@@ -23,7 +23,7 @@ const app = express();
 
 // Respond to ANY route so uptime monitors never fail
 app.get("*", (req, res) => {
-  res.status(200).send("ASTRYX bot is running");
+  res.status(200).send("Ok");
 });
 
 const PORT = process.env.PORT || 3000;
