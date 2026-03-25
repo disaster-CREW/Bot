@@ -20,7 +20,11 @@ const __dirname = path.dirname(__filename);
 // KEEP-ALIVE EXPRESS SERVER (REQUIRED FOR RENDER FREE TIER)
 // ---------------------------
 const app = express();
-app.get("/", (req, res) => res.send("ASTRYX bot is running"));
+
+// Respond to ANY route so uptime monitors never fail
+app.get("*", (req, res) => {
+  res.status(200).send("ASTRYX bot is running");
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
