@@ -1,3 +1,4 @@
+import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -14,6 +15,17 @@ import {
 // ---------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ---------------------------
+// KEEP-ALIVE EXPRESS SERVER (REQUIRED FOR RENDER FREE TIER)
+// ---------------------------
+const app = express();
+app.get("/", (req, res) => res.send("ASTRYX bot is running"));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>
+  console.log(`Bot keep-alive server running on port ${PORT}`)
+);
 
 // ---------------------------
 // SAVE GUILD CONFIG
