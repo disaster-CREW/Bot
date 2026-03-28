@@ -27,7 +27,7 @@ export default {
     // Private confirmation message
     await interaction.reply({
       content: `⏳ Timed out **${user.tag}** for **${minutes} minutes**`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
