@@ -187,7 +187,7 @@ for (const folder of commandFolders) {
 // ---------------------------
 // REGISTER SLASH COMMANDS + STARTUP MESSAGE
 // ---------------------------
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   console.log(`
 =========================================
         🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
