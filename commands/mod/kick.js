@@ -4,7 +4,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("kick")
     .setDescription("Kick a member from the server")
-   .setDMPermission(false)
+    .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("user")
         .setDescription("User to kick")
@@ -22,9 +22,19 @@ export default {
     const reason = interaction.options.getString("reason") || "No reason provided";
 
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply("User not found in this server.");
+    if (!member) {
+      return interaction.reply({
+        content: "User not found in this server.",
+        ephemeral: true
+      });
+    }
 
     await member.kick(reason);
-    interaction.reply(`🦵 Kicked **${user.tag}** — ${reason}`);
+
+    // Private confirmation message
+    await interaction.reply({
+      content: `🦵 Kicked **${user.tag}** — ${reason}`,
+      ephemeral: true
+    });
   }
 };
