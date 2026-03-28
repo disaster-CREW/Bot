@@ -2,8 +2,8 @@ import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
-  .setName("ban")
-   .setDescription("Ban a member from the server")
+    .setName("ban")
+    .setDescription("Ban a member from the server")
     .setDMPermission(false)
     .addUserOption(opt =>
       opt.setName("user")
@@ -22,6 +22,11 @@ export default {
     const reason = interaction.options.getString("reason") || "No reason provided";
 
     await interaction.guild.members.ban(user.id, { reason });
-    interaction.reply(`🔨 Banned **${user.tag}** — ${reason}`);
+
+    // PRIVATE message only visible to the person who ran the command
+    await interaction.reply({
+      content: `🔨 Banned **${user.tag}** — ${reason}`,
+      ephemeral: true
+    });
   }
 };
