@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 export default {
   data: new SlashCommandBuilder()
     .setName("ask")
-    .setDescription("Ask Astryx AI a question ✨")
+    .setDescription("Ask Astryx a question ✨")
     .addStringOption(option =>
       option
         .setName("prompt")
@@ -18,7 +18,7 @@ export default {
     await interaction.deferReply();
 
     const systemPrompt =
-      "You are Astryx AI, a friendly, expressive assistant. " +
+      "You are Astryx, a friendly, expressive assistant. " +
       "Use emojis naturally, stay positive, helpful, and age‑appropriate. " +
       "Avoid unsafe topics and keep explanations clear and simple.";
 
