@@ -24,6 +24,10 @@ export default {
     const member = await interaction.guild.members.fetch(user.id);
     await member.timeout(minutes * 60 * 1000);
 
-    interaction.reply(`⏳ Timed out **${user.tag}** for **${minutes} minutes**`);
+    // Private confirmation message
+    await interaction.reply({
+      content: `⏳ Timed out **${user.tag}** for **${minutes} minutes**`,
+      ephemeral: true
+    });
   }
 };
