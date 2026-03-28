@@ -42,7 +42,7 @@ export default {
       content: dmSuccess
         ? `📨 Warning sent to **${target.tag}** in DMs.`
         : `⚠️ Could not DM **${target.tag}**. Their DMs may be closed.`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
