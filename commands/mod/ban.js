@@ -26,7 +26,7 @@ export default {
     // PRIVATE message only visible to the person who ran the command
     await interaction.reply({
       content: `🔨 Banned **${user.tag}** — ${reason}`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
