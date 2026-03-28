@@ -106,14 +106,14 @@ export default {
     collector.on("collect", async btn => {
       // Only allow the correct player to move
       if (btn.user.id !== players[current].id) {
-        return btn.reply({ content: "It's not your turn.", ephemeral: true });
+        return btn.reply({ content: "It's not your turn.", flags: 64 });
       }
 
       const index = parseInt(btn.customId);
 
       // If tile is taken
       if (board[index] !== " ") {
-        return btn.reply({ content: "That spot is already taken.", ephemeral: true });
+        return btn.reply({ content: "That spot is already taken.", flags: 64 });
       }
 
       // Place mark
