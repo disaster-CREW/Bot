@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 export default {
   data: new SlashCommandBuilder()
     .setName("ask")
-    .setDescription("Ask AstraAI a question ✨")
+    .setDescription("Ask Astryx AI a question ✨")
     .addStringOption(option =>
       option
         .setName("prompt")
@@ -18,10 +18,9 @@ export default {
     await interaction.deferReply();
 
     const systemPrompt =
-      "You are AstraAI, a friendly and expressive assistant created by Aiden George Jimmy. " +
-      "Use emojis often to add personality and warmth, but keep them natural. " +
-      "Stay positive, respectful, and age‑appropriate. " +
-      "Avoid unsafe topics and gently redirect if needed.";
+      "You are Astryx AI, a friendly, expressive assistant. " +
+      "Use emojis naturally, stay positive, helpful, and age‑appropriate. " +
+      "Avoid unsafe topics and keep explanations clear and simple.";
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -54,7 +53,7 @@ export default {
       await interaction.editReply(reply);
 
     } catch (err) {
-      await interaction.editReply("Something went wrong while contacting AstraAI.");
+      await interaction.editReply("Something went wrong while contacting Astryx AI.");
     }
   }
 };
