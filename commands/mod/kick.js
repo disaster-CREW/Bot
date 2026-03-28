@@ -34,7 +34,7 @@ export default {
     // Private confirmation message
     await interaction.reply({
       content: `🦵 Kicked **${user.tag}** — ${reason}`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
