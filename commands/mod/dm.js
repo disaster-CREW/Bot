@@ -17,7 +17,7 @@ export default {
 
     try {
       await user.send(message);
-      await interaction.reply({ content: "DM sent.", ephemeral: true });
+      await interaction.reply({ content: "DM sent.", flags: 64 });
     } catch {
       await interaction.reply({ content: "I couldn't DM that user.", ephemeral: true });
     }
