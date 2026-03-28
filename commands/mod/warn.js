@@ -23,17 +23,13 @@ export default {
     const target = interaction.options.getUser("user");
     const reason = interaction.options.getString("reason");
 
-    // Create the embed for the DM
     const embed = new EmbedBuilder()
       .setTitle("⚠️ You Have Been Warned")
       .setDescription(`You received a moderation warning in **${interaction.guild.name}**.`)
-      .addFields(
-        { name: "Reason", value: reason }
-      )
+      .addFields({ name: "Reason", value: reason })
       .setColor("Yellow")
       .setTimestamp();
 
-    // Try to DM the user
     let dmSuccess = true;
     try {
       await target.send({ embeds: [embed] });
@@ -41,11 +37,12 @@ export default {
       dmSuccess = false;
     }
 
-    // Server confirmation
-    if (dmSuccess) {
-      await interaction.reply(`📨 Warning sent to **${target.tag}** in DMs.`);
-    } else {
-      await interaction.reply(`⚠️ Could not DM **${target.tag}**. Their DMs may be closed.`);
-    }
+    // PRIVATE confirmation message
+    await interaction.reply({
+      content: dmSuccess
+        ? `📨 Warning sent to **${target.tag}** in DMs.`
+        : `⚠️ Could not DM **${target.tag}**. Their DMs may be closed.`,
+      ephemeral: true
+    });
   }
 };
