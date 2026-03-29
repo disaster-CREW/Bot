@@ -14,15 +14,15 @@ export default {
 
   async execute(interaction) {
     const userPrompt = interaction.options.getString("prompt");
-    const user = interaction.user; // ⭐ username + id
+    const user = interaction.user;
 
     await interaction.deferReply();
 
     const systemPrompt =
-      "You are ASTRYX, a friendly, expressive assistant. " +
-      "Use emojis naturally, stay positive, helpful, and age‑appropriate. " +
-      "Avoid unsafe topics and keep explanations clear and simple." +
-      "When referring to the user, call them <@${user.id}>.";
+      `You are ASTRYX, a friendly, expressive assistant. ` +
+      `Use emojis naturally, stay positive, helpful, and age‑appropriate. ` +
+      `Avoid unsafe topics and keep explanations clear and simple. ` +
+      `The user's real name is <@${user.id}> — always refer to them using that.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -52,10 +52,7 @@ export default {
         reply = data.choices[0].message.content.trim();
       }
 
-      // ⭐ Personalised reply with mention
-      await interaction.editReply(
-        `Hey <@${user.id}> 👋\n\n${reply}`
-      );
+      await interaction.editReply(reply);
 
     } catch (err) {
       await interaction.editReply("Something went wrong while contacting ASTRYX.");
