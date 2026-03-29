@@ -1,3 +1,4 @@
+
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -75,7 +76,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions
   ]
 });
-
 // ---------------------------
 // GUILD SETUP EVENT
 // ---------------------------
@@ -177,7 +177,6 @@ for (const folder of commandFolders) {
     }
   }
 }
-
 // ---------------------------
 // REGISTER SLASH COMMANDS
 // ---------------------------
@@ -307,7 +306,6 @@ client.on("interactionCreate", async interaction => {
     }
   }
 });
-
 // ---------------------------
 // REACTION ROLE HANDLERS
 // ---------------------------
