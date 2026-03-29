@@ -14,6 +14,7 @@ export default {
 
   async execute(interaction) {
     const userPrompt = interaction.options.getString("prompt");
+    const user = interaction.user; // ⭐ username + id
 
     await interaction.deferReply();
 
@@ -50,7 +51,10 @@ export default {
         reply = data.choices[0].message.content.trim();
       }
 
-      await interaction.editReply(reply);
+      // ⭐ Add username to the final reply
+      await interaction.editReply(
+        `**${user.username}**, here’s your answer:\n\n${reply}`
+      );
 
     } catch (err) {
       await interaction.editReply("Something went wrong while contacting ASTRYX.");
