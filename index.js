@@ -6,8 +6,7 @@ import {
   Client,
   GatewayIntentBits,
   REST,
-  Routes,
-  MessageFlags
+  Routes
 } from "discord.js";
 
 // ---------------------------
@@ -17,14 +16,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ---------------------------
-// KEEP-ALIVE EXPRESS SERVER (REQUIRED FOR RENDER FREE TIER)
+// KEEP-ALIVE EXPRESS SERVER
 // ---------------------------
 const app = express();
-
-// Respond to ANY route so uptime monitors never fail
-app.get("*", (req, res) => {
-  res.status(200).send("Ok");
-});
+app.get("*", (req, res) => res.status(200).send("Ok"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
@@ -64,12 +59,9 @@ function hasStaffPermission(member, guildId) {
   const guildConfig = config[guildId];
   if (!guildConfig) return false;
 
-  const adminRole = guildConfig.adminRole;
-  const modRole = guildConfig.modRole;
-
   return (
-    member.roles.cache.has(adminRole) ||
-    member.roles.cache.has(modRole)
+    member.roles.cache.has(guildConfig.adminRole) ||
+    member.roles.cache.has(guildConfig.modRole)
   );
 }
 
@@ -77,7 +69,11 @@ function hasStaffPermission(member, guildId) {
 // DISCORD CLIENT
 // ---------------------------
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions
+  ]
 });
 
 // ---------------------------
@@ -175,9 +171,7 @@ for (const folder of commandFolders) {
       command.category = folder;
       client.commands.set(command.data.name, command);
       commands.push(command.data.toJSON());
-      console.log(
-        `✅ Loaded command: ${command.data.name} (Category: ${folder})`
-      );
+      console.log(`✅ Loaded command: ${command.data.name} (Category: ${folder})`);
     } else {
       console.log(`❌ Invalid command file: ${file}`);
     }
@@ -185,7 +179,7 @@ for (const folder of commandFolders) {
 }
 
 // ---------------------------
-// REGISTER SLASH COMMANDS + STARTUP MESSAGE
+// REGISTER SLASH COMMANDS
 // ---------------------------
 client.once("clientReady", async () => {
   console.log(`
@@ -221,14 +215,14 @@ client.on("interactionCreate", async interaction => {
       if (!interaction.guild) {
         return interaction.reply({
           content: "Moderation commands cannot be used in DMs.",
-          ephemeral: true
+          flags: 64
         });
       }
 
       if (!hasStaffPermission(interaction.member, interaction.guild.id)) {
         return interaction.reply({
           content: "You do not have permission to use this command.",
-          ephemeral: true
+          flags: 64
         });
       }
     }
@@ -241,7 +235,7 @@ client.on("interactionCreate", async interaction => {
       if (!interaction.replied) {
         interaction.reply({
           content: "There was an error executing this command.",
-          flags: MessageFlags.Ephemeral
+          flags: 64
         });
       }
     }
@@ -256,7 +250,7 @@ client.on("interactionCreate", async interaction => {
 
       await interaction.reply({
         content: `Admin role set to <@&${adminRole}>`,
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -266,7 +260,7 @@ client.on("interactionCreate", async interaction => {
 
       await interaction.reply({
         content: `Moderator role set to <@&${modRole}>`,
-        ephemeral: true
+        flags: 64
       });
     }
   }
@@ -281,9 +275,8 @@ client.on("interactionCreate", async interaction => {
 
       if (!guildConfig?.adminRole || !guildConfig?.modRole) {
         return interaction.reply({
-          content:
-            "Please select both an Admin and Moderator role before finishing setup.",
-          ephemeral: true
+          content: "Please select both an Admin and Moderator role before finishing setup.",
+          flags: 64
         });
       }
 
@@ -307,13 +300,52 @@ client.on("interactionCreate", async interaction => {
                 inline: true
               }
             ],
-            footer: {
-              text: "ASTRYX • Setup System"
-            }
+            footer: { text: "ASTRYX • Setup System" }
           }
         ]
       });
     }
+  }
+});
+
+// ---------------------------
+// REACTION ROLE HANDLERS
+// ---------------------------
+client.on("messageReactionAdd", async (reaction, user) => {
+  if (user.bot) return;
+
+  const data = (await import("./commands/misc/reactroles.js")).default;
+  if (!data.messageId) return;
+  if (reaction.message.id !== data.messageId) return;
+
+  const member = reaction.message.guild.members.cache.get(user.id);
+  if (!member) return;
+
+  if (reaction.emoji.name === data.emoji1) {
+    await member.roles.add(data.role1).catch(() => {});
+  }
+
+  if (reaction.emoji.name === data.emoji2) {
+    await member.roles.add(data.role2).catch(() => {});
+  }
+});
+
+client.on("messageReactionRemove", async (reaction, user) => {
+  if (user.bot) return;
+
+  const data = (await import("./commands/misc/reactroles.js")).default;
+  if (!data.messageId) return;
+  if (reaction.message.id !== data.messageId) return;
+
+  const member = reaction.message.guild.members.cache.get(user.id);
+  if (!member) return;
+
+  if (reaction.emoji.name === data.emoji1) {
+    await member.roles.remove(data.role1).catch(() => {});
+  }
+
+  if (reaction.emoji.name === data.emoji2) {
+    await member.roles.remove(data.role2).catch(() => {});
   }
 });
 
