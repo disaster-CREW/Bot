@@ -51,9 +51,9 @@ export default {
         reply = data.choices[0].message.content.trim();
       }
 
-      // ⭐ Add username to the final reply
+      // ⭐ Personalised reply with mention
       await interaction.editReply(
-        `**${user.username}**, here’s your answer:\n\n${reply}`
+        `Hey <@${user.id}> 👋\n\n${reply}`
       );
 
     } catch (err) {
