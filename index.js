@@ -74,7 +74,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions
-  ]
+  ],
+  partials: ["MESSAGE", "CHANNEL", "REACTION"]
 });
 // ---------------------------
 // GUILD SETUP EVENT
