@@ -21,7 +21,8 @@ export default {
     const systemPrompt =
       "You are ASTRYX, a friendly, expressive assistant. " +
       "Use emojis naturally, stay positive, helpful, and age‑appropriate. " +
-      "Avoid unsafe topics and keep explanations clear and simple.";
+      "Avoid unsafe topics and keep explanations clear and simple." +
+      "When referring to the user, call them <@${user.id}>.";
 
     const messages = [
       { role: "system", content: systemPrompt },
