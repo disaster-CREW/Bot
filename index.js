@@ -1,4 +1,3 @@
-
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -72,11 +71,10 @@ function hasStaffPermission(member, guildId) {
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions
-  ],
-  partials: ["MESSAGE", "CHANNEL", "REACTION"]
+    GatewayIntentBits.GuildMessages
+  ]
 });
+
 // ---------------------------
 // GUILD SETUP EVENT
 // ---------------------------
@@ -178,6 +176,7 @@ for (const folder of commandFolders) {
     }
   }
 }
+
 // ---------------------------
 // REGISTER SLASH COMMANDS
 // ---------------------------
@@ -305,46 +304,6 @@ client.on("interactionCreate", async interaction => {
         ]
       });
     }
-  }
-});
-// ---------------------------
-// REACTION ROLE HANDLERS
-// ---------------------------
-client.on("messageReactionAdd", async (reaction, user) => {
-  if (user.bot) return;
-
-  const data = (await import("./commands/misc/reactroles.js")).default;
-  if (!data.messageId) return;
-  if (reaction.message.id !== data.messageId) return;
-
-  const member = reaction.message.guild.members.cache.get(user.id);
-  if (!member) return;
-
-  if (reaction.emoji.name === data.emoji1) {
-    await member.roles.add(data.role1).catch(() => {});
-  }
-
-  if (reaction.emoji.name === data.emoji2) {
-    await member.roles.add(data.role2).catch(() => {});
-  }
-});
-
-client.on("messageReactionRemove", async (reaction, user) => {
-  if (user.bot) return;
-
-  const data = (await import("./commands/misc/reactroles.js")).default;
-  if (!data.messageId) return;
-  if (reaction.message.id !== data.messageId) return;
-
-  const member = reaction.message.guild.members.cache.get(user.id);
-  if (!member) return;
-
-  if (reaction.emoji.name === data.emoji1) {
-    await member.roles.remove(data.role1).catch(() => {});
-  }
-
-  if (reaction.emoji.name === data.emoji2) {
-    await member.roles.remove(data.role2).catch(() => {});
   }
 });
 
