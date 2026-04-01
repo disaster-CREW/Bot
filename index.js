@@ -214,7 +214,7 @@ client.once("clientReady", async () => {
       body: commands
     });
 
-    console.log("📌 Slash commands registered globally.");
+    console.log("🌍 Slash commands registered globally.");
   } catch (error) {
     console.error("❌ Error registering commands:", error);
   }
