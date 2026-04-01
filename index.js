@@ -150,37 +150,49 @@ client.on("guildCreate", async guild => {
 });
 
 // ---------------------------
-// COMMAND LOADER
+// COMMAND LOADER (RENDER-SAFE)
 // ---------------------------
 client.commands = new Map();
 const commands = [];
 
 const commandsPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(commandsPath);
 
-for (const folder of commandFolders) {
-  const folderPath = path.join(commandsPath, folder);
+// If commands folder doesn't exist, avoid crashing
+if (fs.existsSync(commandsPath)) {
+  const commandFolders = fs.readdirSync(commandsPath);
 
-  // Skip non-folders (Render sometimes adds weird files)
-  if (!fs.lstatSync(folderPath).isDirectory()) continue;
+  for (const folder of commandFolders) {
+    const folderPath = path.join(commandsPath, folder);
 
-  const commandFiles = fs
-    .readdirSync(folderPath)
-    .filter(f => f.endsWith(".js"));
+    // Skip if not a folder
+    if (!fs.lstatSync(folderPath).isDirectory()) continue;
 
-  for (const file of commandFiles) {
-    const filePath = path.join(folderPath, file);
-    const command = (await import(`file://${filePath}`)).default;
+    let commandFiles = [];
+    try {
+      commandFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".js"));
+    } catch {
+      continue; // unreadable folder → skip
+    }
 
-    if (command?.data && command?.execute) {
-      command.category = folder;
-      client.commands.set(command.data.name, command);
-      commands.push(command.data.toJSON());
-      console.log(`✅ Loaded command: ${command.data.name} (Category: ${folder})`);
-    } else {
-      console.log(`❌ Invalid command file: ${file}`);
+    // Skip empty or ghost folders
+    if (commandFiles.length === 0) continue;
+
+    for (const file of commandFiles) {
+      const filePath = path.join(folderPath, file);
+      const command = (await import(`file://${filePath}`)).default;
+
+      if (command?.data && command?.execute) {
+        command.category = folder;
+        client.commands.set(command.data.name, command);
+        commands.push(command.data.toJSON());
+        console.log(`✅ Loaded command: ${command.data.name} (Category: ${folder})`);
+      } else {
+        console.log(`❌ Invalid command file: ${file}`);
+      }
     }
   }
+} else {
+  console.log("⚠️ No commands folder found.");
 }
 
 // ---------------------------
