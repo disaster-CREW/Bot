@@ -18,7 +18,7 @@ export default {
     if (amount < 1 || amount > 100) {
       return interaction.reply({
         content: "Amount must be between 1 and 100.",
-        ephemeral: true
+        flags: 64
       });
     }
 
