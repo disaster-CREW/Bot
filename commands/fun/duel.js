@@ -22,17 +22,16 @@ export default {
     const opponent = interaction.options.getUser("opponent");
 
     if (opponent.bot) {
-      return interaction.reply("You can't duel a bot.");
+      return interaction.reply({ content: "You can't duel a bot.", ephemeral: true });
     }
 
     if (opponent.id === challenger.id) {
-      return interaction.reply("You can't duel yourself.");
+      return interaction.reply({ content: "You can't duel yourself.", ephemeral: true });
     }
 
-    // Initial empty board
+    // Board
     let board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
 
-    // Players
     const players = {
       X: challenger,
       O: opponent
@@ -40,7 +39,7 @@ export default {
 
     let current = "X";
 
-    // Create buttons for the board
+    // Build board buttons
     const getBoardButtons = () => {
       const rows = [];
       for (let i = 0; i < 3; i++) {
@@ -66,7 +65,7 @@ export default {
       return rows;
     };
 
-    // Win check function
+    // Win check
     const checkWin = () => {
       const wins = [
         [0, 1, 2],
@@ -78,7 +77,6 @@ export default {
         [0, 4, 8],
         [2, 4, 6]
       ];
-
       return wins.some(([a, b, c]) =>
         board[a] !== " " &&
         board[a] === board[b] &&
@@ -86,40 +84,36 @@ export default {
       );
     };
 
-    // Check draw
     const checkDraw = () => board.every(cell => cell !== " ");
 
-    // Send initial board
+    // Send board (fetchReply REQUIRED)
     const message = await interaction.reply({
       content: `🎮 **Tic Tac Toe Duel!**  
 ❌ ${challenger} vs ⭕ ${opponent}  
 **${players[current]} goes first!**`,
-      components: getBoardButtons()
+      components: getBoardButtons(),
+      fetchReply: true
     });
 
-    // Create collector
+    // Collector
     const collector = message.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 120000 // 2 minutes
+      time: 120000
     });
 
     collector.on("collect", async btn => {
-      // Only allow the correct player to move
       if (btn.user.id !== players[current].id) {
-        return btn.reply({ content: "It's not your turn.", flags: 64 });
+        return btn.reply({ content: "It's not your turn.", ephemeral: true });
       }
 
       const index = parseInt(btn.customId);
 
-      // If tile is taken
       if (board[index] !== " ") {
-        return btn.reply({ content: "That spot is already taken.", flags: 64 });
+        return btn.reply({ content: "That spot is already taken.", ephemeral: true });
       }
 
-      // Place mark
       board[index] = current;
 
-      // Check win
       if (checkWin()) {
         collector.stop("win");
         return btn.update({
@@ -128,7 +122,6 @@ export default {
         });
       }
 
-      // Check draw
       if (checkDraw()) {
         collector.stop("draw");
         return btn.update({
@@ -137,10 +130,8 @@ export default {
         });
       }
 
-      // Switch turn
       current = current === "X" ? "O" : "X";
 
-      // Update board
       await btn.update({
         content: `🎮 **Tic Tac Toe Duel!**  
 ❌ ${challenger} vs ⭕ ${opponent}  
@@ -152,14 +143,18 @@ export default {
     collector.on("end", async (_, reason) => {
       if (reason === "win" || reason === "draw") return;
 
-      // Time ran out
+      // Disable all buttons safely
+      const disabled = getBoardButtons().map(row => {
+        const newRow = new ActionRowBuilder();
+        for (const btn of row.components) {
+          newRow.addComponents(ButtonBuilder.from(btn).setDisabled(true));
+        }
+        return newRow;
+      });
+
       await message.edit({
         content: "⏳ Duel ended due to inactivity.",
-        components: getBoardButtons().map(row =>
-          new ActionRowBuilder().addComponents(
-            row.components.map(btn => ButtonBuilder.from(btn).setDisabled(true))
-          )
-        )
+        components: disabled
       });
     });
   }
