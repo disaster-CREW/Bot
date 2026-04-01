@@ -198,7 +198,7 @@ if (fs.existsSync(commandsPath)) {
 // ---------------------------
 // REGISTER SLASH COMMANDS
 // ---------------------------
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   console.log(`
 =========================================
         🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
