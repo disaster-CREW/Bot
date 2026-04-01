@@ -71,7 +71,9 @@ function hasStaffPermission(member, guildId) {
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.MessageContent
   ]
 });
 
@@ -158,6 +160,10 @@ const commandFolders = fs.readdirSync(commandsPath);
 
 for (const folder of commandFolders) {
   const folderPath = path.join(commandsPath, folder);
+
+  // Skip non-folders (Render sometimes adds weird files)
+  if (!fs.lstatSync(folderPath).isDirectory()) continue;
+
   const commandFiles = fs
     .readdirSync(folderPath)
     .filter(f => f.endsWith(".js"));
@@ -180,7 +186,7 @@ for (const folder of commandFolders) {
 // ---------------------------
 // REGISTER SLASH COMMANDS
 // ---------------------------
-client.once("clientReady", async () => {
+client.once("ready", async () => {
   console.log(`
 =========================================
         🎉🎉🥳 ASTRYX HAS BEEN BORN 🥳🎉🎉
