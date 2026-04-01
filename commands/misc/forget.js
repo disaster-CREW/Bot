@@ -16,7 +16,7 @@ export default {
     await interaction.reply({
       content: `🧹 ASTRYX has forgotten everything we talked about, <@${user.id}>.  
 You’re starting fresh now.`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
