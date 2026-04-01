@@ -1,7 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { userMemory } from "../../misc/ask.js"; 
-// ^ This path is correct because this file will be inside commands/<category>/forget.js
-//   and ask.js is inside commands/misc/ask.js
+import { userMemory } from "./ask.js"; 
+// ⬆️ Correct path because forget.js and ask.js are in the same folder
 
 export default {
   data: new SlashCommandBuilder()
