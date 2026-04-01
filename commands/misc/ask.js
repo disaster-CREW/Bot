@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import fetch from "node-fetch";
 
 // Simple in‑memory memory store
-const userMemory = new Map();
+export const userMemory = new Map();   // <-- FIXED (now exported)
 
 export default {
   data: new SlashCommandBuilder()
