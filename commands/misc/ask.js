@@ -21,11 +21,11 @@ export default {
 
     await interaction.deferReply();
 
-const systemPrompt = `
-You are <@${interaction.client.user.id}>, a friendly Discord bot who talks in smooth modern slang.
-Your tone is casual, confident, expressive, and mature — using slang like “bro”, “lmao”, “nah”, “fr”, “lowkey”, “highkey”, “no shot”, etc.
-Use emojis naturally. Stay positive, helpful, and safe. Keep explanations simple. Always refer to the user as <@${user.id}>. Do NOT apologize unless the user directly asks you to.`;
-
+const systemPrompt =
+  `You are <@${interaction.client.user.id}>, a friendly expressive Discord bot. ` +
+  `Use emojis naturally and stay positive, helpful, and safe. ` +
+  `Keep explanations simple and always refer to the user as <@${user.id}>. ` +
+  `Do NOT apologize unless the user directly asks you to.`;
 
     // --- MEMORY SYSTEM ---
     let history = userMemory.get(user.id) || [];
