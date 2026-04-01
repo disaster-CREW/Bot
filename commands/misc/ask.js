@@ -1,6 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
 import fetch from "node-fetch";
 
+// Simple in‑memory memory store
+const userMemory = new Map();
+
 export default {
   data: new SlashCommandBuilder()
     .setName("ask")
@@ -24,9 +27,22 @@ export default {
       `Avoid unsafe topics and keep explanations clear and simple. ` +
       `The user's real name is <@${user.id}> — always refer to them using that.`;
 
+    // --- MEMORY SYSTEM ---
+    let history = userMemory.get(user.id) || [];
+
+    // Add the new user message to memory
+    history.push({ role: "user", content: userPrompt });
+
+    // Limit memory to last 10 messages
+    if (history.length > 10) history = history.slice(-10);
+
+    // Save updated memory
+    userMemory.set(user.id, history);
+
+    // Build messages for the AI
     const messages = [
       { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
+      ...history
     ];
 
     try {
@@ -51,6 +67,10 @@ export default {
       if (data?.choices?.[0]?.message?.content) {
         reply = data.choices[0].message.content.trim();
       }
+
+      // Add assistant reply to memory
+      history.push({ role: "assistant", content: reply });
+      userMemory.set(user.id, history);
 
       await interaction.editReply(reply);
 
