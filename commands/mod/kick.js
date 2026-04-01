@@ -25,7 +25,7 @@ export default {
     if (!member) {
       return interaction.reply({
         content: "User not found in this server.",
-        ephemeral: true
+        flags: 64
       });
     }
 
