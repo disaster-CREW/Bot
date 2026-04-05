@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import fetch from "node-fetch";
 
-// Per‑user memory
+// Shared memory map (used by /ask and /forget)
 export const userMemory = new Map();
 
 export default {
@@ -21,19 +21,21 @@ export default {
 
     await interaction.deferReply();
 
-const systemPrompt = 
- `Your name is <@${interaction.client.user.id}>. Always call yourself exactly <@${interaction.client.user.id}>. ` +
- ` You are an expressive Discord bot who uses emojis naturally and speaks with personality. ` +
- ` Never mention your model name or break character; stay friendly, positive, and engaging. ` +
- ` Keep explanations simple and always call the user <@${user.id}>. Do not apologize unless asked. `;
+    // -------------------------
+    // SYSTEM PROMPT (4 lines, spaced)
+    // -------------------------
+    const systemPrompt = 
+     `Your name is <@${interaction.client.user.id}>. Always call yourself exactly <@${interaction.client.user.id}>.` +
+     ` You are an expressive Discord bot who uses emojis naturally.` +
+     ` Never mention your model name or break character; stay friendly and positive.` +
+     ` Keep explanations simple and always call the user <@${user.id}>. Do not apologize unless asked.`;
 
     // -------------------------
-    // MEMORY SYSTEM (CLEAN + SAFE)
+    // MEMORY SYSTEM (8 messages)
     // -------------------------
-
     let history = userMemory.get(user.id) || [];
 
-    // Remove broken or empty entries
+    // Remove corrupted entries
     history = history.filter(m =>
       m &&
       typeof m.content === "string" &&
@@ -44,10 +46,10 @@ const systemPrompt =
     // Add new user message
     history.push({ role: "user", content: userPrompt });
 
-    // Keep last 10 messages only
-    if (history.length > 10) history = history.slice(-10);
+    // Keep last 8 messages only (Groq-safe)
+    if (history.length > 8) history = history.slice(-8);
 
-    // Save cleaned memory
+    // Save updated memory
     userMemory.set(user.id, history);
 
     // Build messages for Groq
@@ -64,7 +66,7 @@ const systemPrompt =
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          model: "groq/compound-mini", // your model
+          model: "groq/compound-mini",
           messages,
           max_tokens: 190,
           temperature: 0.7
@@ -73,7 +75,6 @@ const systemPrompt =
 
       const data = await response.json();
 
-      // If Groq returns an error, show it
       if (data.error) {
         console.error("Groq API Error:", data.error);
         return interaction.editReply(`Groq Error: ${data.error.message}`);
@@ -81,14 +82,12 @@ const systemPrompt =
 
       const reply = data?.choices?.[0]?.message?.content?.trim();
 
-      // If Groq gave a real reply, store it
       if (reply) {
         history.push({ role: "assistant", content: reply });
         userMemory.set(user.id, history);
         return interaction.editReply(reply);
       }
 
-      // If Groq returned nothing, DO NOT store fallback
       return interaction.editReply("I couldn't generate a response.");
 
     } catch (err) {
