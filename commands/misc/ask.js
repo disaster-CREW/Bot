@@ -19,13 +19,7 @@ export default {
     const userPrompt = interaction.options.getString("prompt");
     const user = interaction.user;
 
-    // 👀 Start the "ASTRYX is typing..." indicator in the channel
-    try {
-      await interaction.channel.sendTyping();
-    } catch (typingErr) {
-      console.error("Could not send typing indicator:", typingErr);
-    }
-
+    // Defer reply immediately since web searches take extra time
     await interaction.deferReply();
 
     // -------------------------
@@ -33,9 +27,9 @@ export default {
     // -------------------------
     const systemPrompt = 
      `Your name is <@${interaction.client.user.id}>. Always call yourself exactly <@${interaction.client.user.id}>. ` +
-     ` You are an expressive Discord bot who uses emojis naturally. ` +
-     ` Never mention your model name or break character; stay friendly and positive. ` +
-     ` Keep explanations simple and always call the user <@${user.id}>. Do not apologize unless asked. `;
+     `You are an expressive Discord bot who uses emojis naturally. ` +
+     `Never mention your model name or break character; stay friendly and positive. ` +
+     `Keep explanations simple and always call the user <@${user.id}>. Do not apologize unless asked.`;
 
     // -------------------------
     // MEMORY SYSTEM (8 messages)
@@ -66,17 +60,19 @@ export default {
     ];
 
     try {
-      const response = await fetch("https://groq.com", {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          model: "openai/gpt-oss-20b",
+          // This model natively supports browser search execution
+          model: "openai/gpt-oss-20b", 
           messages,
-          max_tokens: 300,
+          max_tokens: 300, // Slightly increased to give room for search content summaries
           temperature: 0.7,
+          // Instructs Groq's servers to automatically evaluate and use web search
           tools: [
             {
               type: "browser_search"
@@ -93,10 +89,14 @@ export default {
         return interaction.editReply(`Groq Error: ${data.error.message}`);
       }
 
-      // 🛠️ FIXED: Cleaned up the double chaining typo here to prevent the crash
-      const reply = data?.choices?.?.message?.content?.trim();
+      let reply = data?.choices?.[0]?.message?.content?.trim();
 
       if (reply) {
+        // Safety truncation for Discord's strict 2000 character limit
+        if (reply.length > 2000) {
+          reply = reply.substring(0, 1997) + "...";
+        }
+
         history.push({ role: "assistant", content: reply });
         userMemory.set(user.id, history);
         return interaction.editReply(reply);
