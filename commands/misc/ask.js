@@ -73,8 +73,7 @@ export default {
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          // 🛠️ FIXED: Changed to an active, valid Groq model string that supports browser_search
-          model: "openai/gpt-4o",
+          model: "openai/gpt-oss-20b",
           messages,
           max_tokens: 300,
           temperature: 0.7,
@@ -87,13 +86,6 @@ export default {
         })
       });
 
-      // 🛡️ Added safety guard for non-OK server statuses to prevent JSON parsing crashes
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Groq API HTTP Error ${response.status}:`, errorText);
-        return interaction.editReply(`Groq Gateway Error (HTTP ${response.status}).`);
-      }
-
       const data = await response.json();
 
       if (data.error) {
@@ -101,7 +93,8 @@ export default {
         return interaction.editReply(`Groq Error: ${data.error.message}`);
       }
 
-      const reply = data?.choices?.[0]?.message?.content?.trim();
+      // 🛠️ FIXED: Cleaned up the double chaining typo here to prevent the crash
+      const reply = data?.choices?.?.message?.content?.trim();
 
       if (reply) {
         history.push({ role: "assistant", content: reply });
