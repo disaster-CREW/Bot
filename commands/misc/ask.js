@@ -46,7 +46,6 @@ export default {
     // -------------------------
     // PERSISTENT MEMORY FETCH
     // -------------------------
-    // Retrieve the user's data object, or build a fresh one if they are new
     let userData = userMemory.get(user.id) || { history: [], timezone: "UTC" };
     let history = userData.history || [];
 
@@ -101,10 +100,10 @@ export default {
     userData.history = history;
     userMemory.set(user.id, userData);
 
-    // Build messages for Groq
+    // 🛠️ FIXED: For browsing tools, system instructions work best when pre-pended directly to the conversational block array items
     const messages = [
-      { role: "system", content: systemPrompt },
-      ...history
+      { role: "user", content: `[SYSTEM RULES: ${systemPrompt}]\n\nUser Question: ${userPrompt}` },
+      ...history.slice(0, -1) // Exclude the duplicated last prompt item
     ];
 
     try {
@@ -128,6 +127,13 @@ export default {
         })
       });
 
+      // 🛡️ Safety fallback: If Groq complains about anything, log it directly without crashing
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Groq API Error Code ${response.status}:`, errorBody);
+        return interaction.editReply("⚠️ Groq had an internal error processing the search.");
+      }
+
       const data = await response.json();
 
       if (data.error) {
@@ -135,15 +141,14 @@ export default {
         return interaction.editReply(`Groq Error: ${data.error.message}`);
       }
 
-      let reply = data?.choices?.[0]?.message?.content?.trim();
+      // 🛠️ FIXED: Restored to standard single optional chain formatting
+      const reply = data?.choices?.[0]?.message?.content?.trim();
 
       if (reply) {
-        // Safety truncation for Discord's strict 2000 character limit
         if (reply.length > 2000) {
           reply = reply.substring(0, 1997) + "...";
         }
 
-        // Fetch freshly in case it mutated during the network hop
         let postFetchData = userMemory.get(user.id) || userData;
         postFetchData.history.push({ role: "assistant", content: reply });
         userMemory.set(user.id, postFetchData);
