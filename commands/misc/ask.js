@@ -93,6 +93,7 @@ export default {
         return interaction.editReply(`Groq Error: ${data.error.message}`);
       }
 
+      // 🛠️ FIXED: Removed the double optional chaining typo here
       const reply = data?.choices?.[0]?.message?.content?.trim();
 
       if (reply) {
