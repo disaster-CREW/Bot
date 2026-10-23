@@ -8,6 +8,12 @@ export default {
       opt.setName("choice")
         .setDescription("rock, paper, or scissors")
         .setRequired(true)
+        // 🛠️ Restricts user input strictly to a dropdown selection
+        .addChoices(
+          { name: "🪨 Rock", value: "rock" },
+          { name: "📄 Paper", value: "paper" },
+          { name: "✂️ Scissors", value: "scissors" }
+        )
     ),
 
   async execute(interaction) {
